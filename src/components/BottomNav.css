@@ -1,0 +1,87 @@
+/* 8. Bottom Nav — iOS Native Polish */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding-bottom: var(--safe-area-bottom);
+    background: rgba(20, 20, 20, 0.7);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="light"] .bottom-nav {
+    background: rgba(255, 255, 255, 0.72);
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.bottom-nav-inner {
+    max-width: 430px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 8px 4px 6px;
+    position: relative;
+}
+
+/* Sliding indicator */
+.nav-indicator {
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: 20%;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+    transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-indicator::after {
+    content: '';
+    width: 36px;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.35);
+}
+
+.nav-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 48px;
+    padding: 6px 10px;
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: var(--text-tertiary);
+    transition: color 250ms ease, transform 200ms ease;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    flex: 1;
+}
+
+/* 10. Tap feedback */
+.nav-tab:active {
+    transform: scale(0.9);
+}
+
+.nav-tab.active {
+    color: var(--accent);
+}
+
+.nav-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.nav-label {
+    font-size: 0.5625rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}

@@ -1,0 +1,167 @@
+/* ==========================================
+   Workout — Training Logger
+   ========================================== */
+
+.workout-page h2 {
+    margin-bottom: 12px;
+}
+
+.workout-type-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 16px 0;
+}
+
+.workout-type-btn {
+    flex: 1 1 calc(33.33% - 6px);
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 8px;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    background: var(--bg-glass);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    -webkit-tap-highlight-color: transparent;
+    font-family: inherit;
+}
+
+.workout-type-btn:active {
+    transform: scale(0.94);
+}
+
+.workout-type-btn.selected {
+    border-color: var(--accent);
+    background: rgba(var(--accent-rgb), 0.08);
+    box-shadow: 0 0 0 1px var(--accent), var(--accent-glow);
+}
+
+.wt-emoji {
+    font-size: 1.75rem;
+}
+
+.wt-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: 0.01em;
+}
+
+.workout-duration-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.duration-field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.workout-log-btn {
+    width: 100%;
+    margin-top: 12px;
+}
+
+/* cals-estimate removed — now uses editable input field */
+
+/* Logged state */
+.workout-logged {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px;
+    background: rgba(var(--success-rgb), 0.06);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(var(--success-rgb), 0.15);
+    animation: fadeIn 0.35s ease;
+}
+
+.workout-logged-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.workout-logged-emoji {
+    font-size: 2rem;
+}
+
+.workout-check {
+    font-size: 1.5rem;
+    animation: checkBounce 0.5s ease;
+}
+
+/* History */
+.workout-history {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.history-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--bg-glass);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--glass-border);
+    transition: transform 0.2s ease;
+}
+
+.history-item:active {
+    transform: scale(0.985);
+}
+
+.history-emoji {
+    font-size: 1.25rem;
+    width: 32px;
+    text-align: center;
+}
+
+.history-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.history-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+/* 9. Empty state */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 24px 16px;
+    text-align: center;
+}
+
+.empty-icon {
+    font-size: 2rem;
+    opacity: 0.4;
+    margin-bottom: 4px;
+}
+
+.empty-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.empty-sub {
+    font-size: 0.8125rem;
+    color: var(--text-tertiary);
+}
