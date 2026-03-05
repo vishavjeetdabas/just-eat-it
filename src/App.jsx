@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { supabase } from './lib/supabase';
+import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { useAppData } from './hooks/useAppData';
 import { useTheme } from './hooks/useTheme';
 import BottomNav from './components/BottomNav';
@@ -13,9 +13,11 @@ import Login from './pages/Login';
 
 export default function App() {
     const [session, setSession] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(isSupabaseConfigured);
 
     useEffect(() => {
+        if (!isSupabaseConfigured) return;
+
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
             setLoading(false);
@@ -27,6 +29,24 @@ export default function App() {
 
         return () => subscription.unsubscribe();
     }, []);
+
+    if (!isSupabaseConfigured) {
+        return (
+            <div className="page" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', minHeight: '100dvh' }}>
+                <h1 className="text-display mb-12">⚠️ Setup Required</h1>
+                <p className="text-body mb-24" style={{ color: 'var(--text-secondary)' }}>
+                    Supabase environment variables are missing.
+                </p>
+                <div className="glass-card w-full" style={{ textAlign: 'left' }}>
+                    <p className="text-caption mb-12">If you deployed this app, you must add the following Environment Variables to your hosting provider (Vercel, Netlify, etc):</p>
+                    <ul className="text-micro stack-sm">
+                        <li><code>VITE_SUPABASE_URL</code></li>
+                        <li><code>VITE_SUPABASE_ANON_KEY</code></li>
+                    </ul>
+                </div>
+            </div>
+        );
+    }
 
     if (loading) return null;
 
