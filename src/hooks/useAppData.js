@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../lib/supabase';
 import { formatDateKeyLocal } from '../data/dietPlan';
 
 const STORAGE_KEY = 'justeatit_data';
@@ -89,6 +90,20 @@ function sanitizeWeight(rawWeight) {
     return Number.isFinite(w) && w > 0 ? Number(w.toFixed(1)) : null;
 }
 
+export function createEmptyDay(dateKey) {
+    const date = new Date(`${dateKey}T12:00:00`);
+    const isRest = date.getDay() === 0;
+    return {
+        isTrainingDay: !isRest,
+        meals: isRest ? [false, false, false] : [false, false, false, false],
+        water: 0,
+        sleep: null,
+        workout: null,
+        weight: null,
+        photo: null,
+    };
+}
+
 function sanitizeDayData(dateKey, rawDay) {
     const fallback = createEmptyDay(dateKey);
     const input = rawDay && typeof rawDay === 'object' ? rawDay : {};
@@ -158,9 +173,82 @@ function getInitialData() {
     }
 }
 
-export function useAppData() {
+export function useAppData(user) {
     const [data, setData] = useState(getInitialData);
+    const [isCloudSynced, setIsCloudSynced] = useState(false);
 
+    // Initial Fetch from Cloud
+    useEffect(() => {
+        if (!user) return;
+
+        async function fetchCloudData() {
+            try {
+                // Fetch Settings
+                const { data: settingsData, error: settingsError } = await supabase
+                    .from('settings')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .single();
+
+                // Fetch last 14 days to prevent fetching massive amounts of old data
+                const cutoffDate = new Date();
+                cutoffDate.setDate(cutoffDate.getDate() - 14);
+
+                const { data: logsData, error: logsError } = await supabase
+                    .from('daily_logs')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .gte('date_key', cutoffDate.toISOString().split('T')[0]);
+
+                if (settingsError && settingsError.code !== 'PGRST116') {
+                    console.error('Error fetching settings:', settingsError);
+                }
+
+                if (logsError) {
+                    console.error('Error fetching logs:', logsError);
+                }
+
+                setData(prevLocalData => {
+                    const mergedSettings = settingsData ? {
+                        ...prevLocalData.settings,
+                        theme: settingsData.theme || 'dark',
+                        lastEggPrep: settingsData.last_egg_prep || null,
+                    } : prevLocalData.settings;
+
+                    const mergedDays = { ...prevLocalData.days };
+
+                    if (logsData) {
+                        logsData.forEach(log => {
+                            mergedDays[log.date_key] = sanitizeDayData(log.date_key, {
+                                ...mergedDays[log.date_key], // Keep local photos/weight if not in db
+                                isTrainingDay: log.is_training_day,
+                                meals: log.meals,
+                                water: log.water,
+                                sleep: log.sleep,
+                                workout: log.workout
+                            });
+                        });
+                    }
+
+                    const finalData = {
+                        version: APP_DATA_VERSION,
+                        settings: sanitizeSettings(mergedSettings),
+                        days: limitPhotoEntries(mergedDays),
+                    };
+
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(finalData));
+                    return finalData;
+                });
+                setIsCloudSynced(true);
+            } catch (err) {
+                console.error("Cloud sync failed on load", err);
+            }
+        }
+
+        fetchCloudData();
+    }, [user]);
+
+    // Local Storage save debounced
     useEffect(() => {
         const saveTimer = setTimeout(() => {
             try {
@@ -183,32 +271,56 @@ export function useAppData() {
                 days = limitPhotoEntries(days);
             }
 
+            // Cloud Sync Background (Fire and forget, optimistic UI)
+            if (user && isCloudSynced && field !== 'photo' && field !== 'weight') {
+                // We sync core metrics to Postgres table
+                const dbPayload = {
+                    user_id: user.id,
+                    date_key: dateKey,
+                    is_training_day: updatedDay.isTrainingDay,
+                    meals: updatedDay.meals,
+                    water: updatedDay.water,
+                    sleep: updatedDay.sleep || {},
+                    workout: updatedDay.workout || null,
+                    updated_at: new Date().toISOString()
+                };
+
+                supabase
+                    .from('daily_logs')
+                    .upsert(dbPayload, { onConflict: 'user_id,date_key' })
+                    .then(({ error }) => {
+                        if (error) console.error("Failed to sync log to cloud:", error);
+                    });
+            }
+
             return { ...prev, days };
         });
-    }, []);
+    }, [user, isCloudSynced]);
 
     const updateSettings = useCallback((updates) => {
-        setData((prev) => ({
-            ...prev,
-            settings: sanitizeSettings({ ...prev.settings, ...updates }),
-        }));
-    }, []);
+        setData((prev) => {
+            const newSettings = sanitizeSettings({ ...prev.settings, ...updates });
+
+            // Cloud Sync Background
+            if (user && isCloudSynced) {
+                supabase
+                    .from('settings')
+                    .upsert({
+                        user_id: user.id,
+                        theme: newSettings.theme,
+                        last_egg_prep: newSettings.lastEggPrep,
+                        updated_at: new Date().toISOString()
+                    })
+                    .then(({ error }) => {
+                        if (error) console.error("Failed to sync settings to cloud:", error);
+                    });
+            }
+
+            return { ...prev, settings: newSettings };
+        });
+    }, [user, isCloudSynced]);
 
     return { data, updateDayField, updateSettings };
-}
-
-export function createEmptyDay(dateKey) {
-    const date = new Date(`${dateKey}T12:00:00`);
-    const isRest = date.getDay() === 0;
-    return {
-        isTrainingDay: !isRest,
-        meals: isRest ? [false, false, false] : [false, false, false, false],
-        water: 0,
-        sleep: null,
-        workout: null,
-        weight: null,
-        photo: null,
-    };
 }
 
 export function calculateStreak(days) {

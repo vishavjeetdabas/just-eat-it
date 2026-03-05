@@ -51,7 +51,7 @@ export default function Progress({ data, updateDayField }) {
             const img = new Image();
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const maxW = 400;
+                const maxW = 800;
                 const scale = Math.min(1, maxW / img.width);
                 canvas.width = Math.round(img.width * scale);
                 canvas.height = img.height * scale;
@@ -62,7 +62,7 @@ export default function Progress({ data, updateDayField }) {
                 }
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 try {
-                    const compressed = canvas.toDataURL('image/jpeg', 0.6);
+                    const compressed = canvas.toDataURL('image/jpeg', 0.85);
                     updateDayField(today, 'photo', compressed);
                 } catch {
                     setPhotoError('Unable to save photo. Storage may be full.');
@@ -134,135 +134,155 @@ export default function Progress({ data, updateDayField }) {
                 <p className="text-caption">Track your transformation</p>
             </div>
 
-            {/* Weekly Summary Card */}
-            <div className="glass-card glow summary-card animate-in animate-delay-1">
-                <h2 className="text-headline">📊 Weekly Summary</h2>
-                <div className="summary-grid">
-                    <div className="summary-item">
-                        <span className="summary-value">{weekSummary.mealPct}%</span>
-                        <span className="text-micro">meals completed</span>
+            <div className="stack-xl">
+                {/* Weekly Summary Card */}
+                <div className="glass-card glow summary-card animate-in animate-delay-1">
+                    <h2 className="text-headline">📊 Weekly Summary</h2>
+                    <div className="summary-grid">
+                        <div className="summary-item">
+                            <span className="summary-value">{weekSummary.mealPct}%</span>
+                            <span className="text-micro">meals completed</span>
+                        </div>
+                        <div className="summary-item">
+                            <span className="summary-value">🔥 {weekSummary.streak}</span>
+                            <span className="text-micro">day streak</span>
+                        </div>
+                        <div className="summary-item">
+                            <span className="summary-value">{weekSummary.avgWater}</span>
+                            <span className="text-micro">avg glasses/day</span>
+                        </div>
+                        <div className="summary-item">
+                            <span className="summary-value">{weekSummary.avgSleep}h</span>
+                            <span className="text-micro">avg sleep</span>
+                        </div>
+                        {weekSummary.weightChange !== null && (
+                            <div className="summary-item full-width">
+                                <span className={`summary-value ${parseFloat(weekSummary.weightChange) < 0 ? 'text-success' : 'text-accent'}`}>
+                                    {parseFloat(weekSummary.weightChange) > 0 ? '+' : ''}{weekSummary.weightChange} kg
+                                </span>
+                                <span className="text-micro">weight change</span>
+                            </div>
+                        )}
                     </div>
-                    <div className="summary-item">
-                        <span className="summary-value">🔥 {weekSummary.streak}</span>
-                        <span className="text-micro">day streak</span>
+                </div>
+
+                {/* Weigh-in */}
+                <div className="glass-card animate-in animate-delay-2">
+                    <h2 className="text-headline">⚖️ Weekly Weigh-in</h2>
+                    <p className="text-caption mb-12">Weigh in once/week, same time, same conditions</p>
+                    <div className="weight-input-row">
+                        <input
+                            type="number"
+                            value={weightInput}
+                            onChange={(e) => setWeightInput(e.target.value)}
+                            placeholder={todayWeight ? `Today: ${todayWeight} kg` : "Enter weight (kg)"}
+                            step="0.1"
+                            className="weight-input"
+                        />
+                        <button className="btn btn-primary" onClick={logWeight}>Log</button>
                     </div>
-                    <div className="summary-item">
-                        <span className="summary-value">{weekSummary.avgWater}</span>
-                        <span className="text-micro">avg glasses/day</span>
-                    </div>
-                    <div className="summary-item">
-                        <span className="summary-value">{weekSummary.avgSleep}h</span>
-                        <span className="text-micro">avg sleep</span>
-                    </div>
-                    {weekSummary.weightChange !== null && (
-                        <div className="summary-item full-width">
-                            <span className={`summary-value ${parseFloat(weekSummary.weightChange) < 0 ? 'text-success' : 'text-accent'}`}>
-                                {parseFloat(weekSummary.weightChange) > 0 ? '+' : ''}{weekSummary.weightChange} kg
-                            </span>
-                            <span className="text-micro">weight change</span>
+
+                    {weighIns.length > 0 && (
+                        <div className="weight-chart">
+                            <div className="weight-bars">
+                                {recentWeighIns.map((entry, i) => {
+                                    const pct = ((entry.weight - weightRange.min) / (weightRange.max - weightRange.min)) * 100;
+                                    return (
+                                        <div key={entry.date} className="weight-bar-col">
+                                            <span className="weight-bar-val">{entry.weight}</span>
+                                            <div className="weight-bar" style={{
+                                                height: `${pct}%`,
+                                                animationDelay: `${i * 0.1}s`
+                                            }} />
+                                            <span className="text-micro">{new Date(entry.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                    {weighIns.length === 0 && (
+                        <div className="section-empty">
+                            <p className="empty-title">No weigh-ins yet</p>
+                            <p className="empty-sub">Log your first weigh-in to start the weekly chart.</p>
                         </div>
                     )}
                 </div>
-            </div>
 
-            {/* Weigh-in */}
-            <div className="glass-card animate-in animate-delay-2">
-                <h2 className="text-headline">⚖️ Weekly Weigh-in</h2>
-                <p className="text-caption mb-12">Weigh in once/week, same time, same conditions</p>
-                <div className="weight-input-row">
+                {/* Progress Photos */}
+                <div className="glass-card animate-in animate-delay-3">
+                    <h2 className="text-headline">📸 Progress Photos</h2>
+                    <p className="text-caption mb-12">Take a photo daily, compare Week 1 vs now</p>
+
                     <input
-                        type="number"
-                        value={weightInput}
-                        onChange={(e) => setWeightInput(e.target.value)}
-                        placeholder={todayWeight ? `Today: ${todayWeight} kg` : "Enter weight (kg)"}
-                        step="0.1"
-                        className="weight-input"
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhoto}
+                        className="hidden-file-input"
                     />
-                    <button className="btn btn-primary" onClick={logWeight}>Log</button>
+                    {todayData?.photo ? (
+                        <div className="row mb-12" style={{ gap: '10px' }}>
+                            <button
+                                type="button"
+                                className="btn btn-secondary flex-1 m-0"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                📷 Retake
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-secondary danger-btn flex-1 m-0"
+                                onClick={() => updateDayField(today, 'photo', null)}
+                            >
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    ) : (
+                        <button
+                            type="button"
+                            className="btn btn-primary photo-btn"
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            📷 Take Today's Photo
+                        </button>
+                    )}
+                    {photoError && <p className="text-caption photo-error">{photoError}</p>}
+
+                    {photos.length > 0 && (
+                        <div className="photo-grid">
+                            {photos.slice(-6).reverse().map(p => (
+                                <div key={p.date} className="photo-item">
+                                    <img src={p.photo} alt={p.date} />
+                                    <span className="text-micro">{new Date(p.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    {photos.length === 0 && (
+                        <div className="section-empty">
+                            <p className="empty-title">No progress photos yet</p>
+                            <p className="empty-sub">Take your first photo today to start comparisons.</p>
+                        </div>
+                    )}
+
+                    {photos.length >= 2 && (
+                        <div className="comparison-section">
+                            <h3 className="text-body fw-600 mb-12">Before & After</h3>
+                            <div className="comparison-grid">
+                                <div className="comparison-item">
+                                    <img src={photos[0].photo} alt="First" />
+                                    <span className="text-micro">{new Date(photos[0].date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                </div>
+                                <div className="comparison-divider">→</div>
+                                <div className="comparison-item">
+                                    <img src={photos[photos.length - 1].photo} alt="Latest" />
+                                    <span className="text-micro">{new Date(photos[photos.length - 1].date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
-
-                {weighIns.length > 0 && (
-                    <div className="weight-chart">
-                        <div className="weight-bars">
-                            {recentWeighIns.map((entry, i) => {
-                                const pct = ((entry.weight - weightRange.min) / (weightRange.max - weightRange.min)) * 100;
-                                return (
-                                    <div key={entry.date} className="weight-bar-col">
-                                        <span className="weight-bar-val">{entry.weight}</span>
-                                        <div className="weight-bar" style={{
-                                            height: `${pct}%`,
-                                            animationDelay: `${i * 0.1}s`
-                                        }} />
-                                        <span className="text-micro">{new Date(entry.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
-                {weighIns.length === 0 && (
-                    <div className="section-empty">
-                        <p className="empty-title">No weigh-ins yet</p>
-                        <p className="empty-sub">Log your first weigh-in to start the weekly chart.</p>
-                    </div>
-                )}
-            </div>
-
-            {/* Progress Photos */}
-            <div className="glass-card animate-in animate-delay-3">
-                <h2 className="text-headline">📸 Progress Photos</h2>
-                <p className="text-caption mb-12">Take a photo daily, compare Week 1 vs now</p>
-
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    onChange={handlePhoto}
-                    className="hidden-file-input"
-                />
-                <button
-                    type="button"
-                    className="btn btn-primary photo-btn"
-                    onClick={() => fileInputRef.current?.click()}
-                >
-                    📷 {todayData?.photo ? 'Retake Today\'s Photo' : 'Take Today\'s Photo'}
-                </button>
-                {photoError && <p className="text-caption photo-error">{photoError}</p>}
-
-                {photos.length > 0 && (
-                    <div className="photo-grid">
-                        {photos.slice(-6).reverse().map(p => (
-                            <div key={p.date} className="photo-item">
-                                <img src={p.photo} alt={p.date} />
-                                <span className="text-micro">{new Date(p.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                            </div>
-                        ))}
-                    </div>
-                )}
-                {photos.length === 0 && (
-                    <div className="section-empty">
-                        <p className="empty-title">No progress photos yet</p>
-                        <p className="empty-sub">Take your first photo today to start comparisons.</p>
-                    </div>
-                )}
-
-                {photos.length >= 2 && (
-                    <div className="comparison-section">
-                        <h3 className="text-body fw-600 mb-12">Before & After</h3>
-                        <div className="comparison-grid">
-                            <div className="comparison-item">
-                                <img src={photos[0].photo} alt="First" />
-                                <span className="text-micro">{new Date(photos[0].date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                            </div>
-                            <div className="comparison-divider">→</div>
-                            <div className="comparison-item">
-                                <img src={photos[photos.length - 1].photo} alt="Latest" />
-                                <span className="text-micro">{new Date(photos[photos.length - 1].date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     );

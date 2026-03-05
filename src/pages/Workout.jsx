@@ -72,110 +72,112 @@ export default function Workout({ data, updateDayField }) {
                 <p className="text-caption">Track your training sessions</p>
             </div>
 
-            {/* Log Today */}
-            <div className="glass-card glow animate-in animate-delay-1">
-                <h2 className="text-headline">🏋️ Today's Session</h2>
-                {dayData.workout ? (
-                    <div className="workout-logged">
-                        <div className="workout-logged-info">
-                            <span className="workout-logged-emoji">{WORKOUT_TYPES.find(t => t.id === dayData.workout.type)?.emoji}</span>
-                            <div>
-                                <p className="text-body fw-600">
-                                    {WORKOUT_TYPES.find(t => t.id === dayData.workout.type)?.name}
-                                </p>
-                                <p className="text-caption">{dayData.workout.duration} min · {dayData.workout.cals} kcal burned</p>
+            <div className="stack-xl">
+                {/* Log Today */}
+                <div className="glass-card glow animate-in animate-delay-1">
+                    <h2 className="text-headline">🏋️ Today's Session</h2>
+                    {dayData.workout ? (
+                        <div className="workout-logged">
+                            <div className="workout-logged-info">
+                                <span className="workout-logged-emoji">{WORKOUT_TYPES.find(t => t.id === dayData.workout.type)?.emoji}</span>
+                                <div>
+                                    <p className="text-body fw-600">
+                                        {WORKOUT_TYPES.find(t => t.id === dayData.workout.type)?.name}
+                                    </p>
+                                    <p className="text-caption">{dayData.workout.duration} min · {dayData.workout.cals} kcal burned</p>
+                                </div>
                             </div>
+                            <span className="workout-check">✅</span>
                         </div>
-                        <span className="workout-check">✅</span>
+                    ) : (
+                        <>
+                            <div className="workout-type-grid">
+                                {WORKOUT_TYPES.map(type => (
+                                    <button
+                                        key={type.id}
+                                        type="button"
+                                        className={`workout-type-btn${selectedType === type.id ? ' selected' : ''}`}
+                                        onClick={() => handleTypeChange(type.id)}
+                                        aria-pressed={selectedType === type.id}
+                                        aria-label={`Select ${type.name} workout`}
+                                    >
+                                        <span className="wt-emoji">{type.emoji}</span>
+                                        <span className="wt-name">{type.name}</span>
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="workout-duration-row">
+                                <div className="duration-field">
+                                    <label className="text-micro">Duration (min)</label>
+                                    <input
+                                        type="number"
+                                        value={duration}
+                                        onChange={(e) => handleDurationChange(e.target.value)}
+                                        placeholder="90"
+                                        min="1"
+                                        max="300"
+                                    />
+                                </div>
+                                <div className="duration-field">
+                                    <label className="text-micro">Calories Burned</label>
+                                    <input
+                                        type="number"
+                                        value={customCals !== '' ? customCals : defaultCals || ''}
+                                        onChange={(e) => setCustomCals(e.target.value)}
+                                        placeholder={String(defaultCals)}
+                                        min="0"
+                                        max="3000"
+                                    />
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                className="btn btn-primary workout-log-btn"
+                                onClick={logWorkout}
+                                disabled={!selectedType || !duration}
+                            >
+                                Log Workout
+                            </button>
+                        </>
+                    )}
+                </div>
+
+                {/* Weekly Stats */}
+                <div className="glass-card animate-in animate-delay-2">
+                    <div className="row-between">
+                        <h2 className="text-headline">🔥 This Week</h2>
+                        <span className="text-accent text-headline">{totalWeeklyCals} kcal</span>
                     </div>
-                ) : (
-                    <>
-                        <div className="workout-type-grid">
-                            {WORKOUT_TYPES.map(type => (
-                                <button
-                                    key={type.id}
-                                    type="button"
-                                    className={`workout-type-btn${selectedType === type.id ? ' selected' : ''}`}
-                                    onClick={() => handleTypeChange(type.id)}
-                                    aria-pressed={selectedType === type.id}
-                                    aria-label={`Select ${type.name} workout`}
-                                >
-                                    <span className="wt-emoji">{type.emoji}</span>
-                                    <span className="wt-name">{type.name}</span>
-                                </button>
+                    <p className="text-caption">Total calories burned from workouts</p>
+                </div>
+
+                {/* History */}
+                <div className="glass-card animate-in animate-delay-3">
+                    <h2 className="text-headline mb-12">History</h2>
+                    {workoutHistory.length > 0 ? (
+                        <div className="workout-history">
+                            {workoutHistory.map(w => (
+                                <div key={w.date} className="history-item">
+                                    <span className="history-emoji">{w.typeInfo?.emoji}</span>
+                                    <div className="history-info">
+                                        <span className="text-body fw-500">{w.typeInfo?.name}</span>
+                                        <span className="text-micro">{new Date(w.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                                    </div>
+                                    <div className="history-stats">
+                                        <span className="text-body fw-600">{w.cals} kcal</span>
+                                        <span className="text-micro">{w.duration} min</span>
+                                    </div>
+                                </div>
                             ))}
                         </div>
-                        <div className="workout-duration-row">
-                            <div className="duration-field">
-                                <label className="text-micro">Duration (min)</label>
-                                <input
-                                    type="number"
-                                    value={duration}
-                                    onChange={(e) => handleDurationChange(e.target.value)}
-                                    placeholder="90"
-                                    min="1"
-                                    max="300"
-                                />
-                            </div>
-                            <div className="duration-field">
-                                <label className="text-micro">Calories Burned</label>
-                                <input
-                                    type="number"
-                                    value={customCals !== '' ? customCals : defaultCals || ''}
-                                    onChange={(e) => setCustomCals(e.target.value)}
-                                    placeholder={String(defaultCals)}
-                                    min="0"
-                                    max="3000"
-                                />
-                            </div>
+                    ) : (
+                        <div className="empty-state">
+                            <span className="empty-icon">🏋️</span>
+                            <p className="empty-title">No workouts yet</p>
+                            <p className="empty-sub">Log today's training session above</p>
                         </div>
-                        <button
-                            type="button"
-                            className="btn btn-primary workout-log-btn"
-                            onClick={logWorkout}
-                            disabled={!selectedType || !duration}
-                        >
-                            Log Workout
-                        </button>
-                    </>
-                )}
-            </div>
-
-            {/* Weekly Stats */}
-            <div className="glass-card animate-in animate-delay-2">
-                <div className="row-between">
-                    <h2 className="text-headline">🔥 This Week</h2>
-                    <span className="text-accent text-headline">{totalWeeklyCals} kcal</span>
+                    )}
                 </div>
-                <p className="text-caption">Total calories burned from workouts</p>
-            </div>
-
-            {/* History */}
-            <div className="glass-card animate-in animate-delay-3">
-                <h2 className="text-headline mb-12">History</h2>
-                {workoutHistory.length > 0 ? (
-                    <div className="workout-history">
-                        {workoutHistory.map(w => (
-                            <div key={w.date} className="history-item">
-                                <span className="history-emoji">{w.typeInfo?.emoji}</span>
-                                <div className="history-info">
-                                    <span className="text-body fw-500">{w.typeInfo?.name}</span>
-                                    <span className="text-micro">{new Date(w.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-                                </div>
-                                <div className="history-stats">
-                                    <span className="text-body fw-600">{w.cals} kcal</span>
-                                    <span className="text-micro">{w.duration} min</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="empty-state">
-                        <span className="empty-icon">🏋️</span>
-                        <p className="empty-title">No workouts yet</p>
-                        <p className="empty-sub">Log today's training session above</p>
-                    </div>
-                )}
             </div>
         </div>
     );

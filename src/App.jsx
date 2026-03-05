@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { supabase } from './lib/supabase';
 import { useAppData } from './hooks/useAppData';
 import { useTheme } from './hooks/useTheme';
 import BottomNav from './components/BottomNav';
@@ -8,9 +9,36 @@ import Calendar from './pages/Calendar';
 import Progress from './pages/Progress';
 import Workout from './pages/Workout';
 import Settings from './pages/Settings';
+import Login from './pages/Login';
 
 export default function App() {
-    const { data, updateDayField, updateSettings } = useAppData();
+    const [session, setSession] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setSession(session);
+            setLoading(false);
+        });
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setSession(session);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    if (loading) return null;
+
+    if (!session) {
+        return <Login />;
+    }
+
+    return <MainApp user={session.user} />;
+}
+
+function MainApp({ user }) {
+    const { data, updateDayField, updateSettings } = useAppData(user);
     const { theme, toggleTheme } = useTheme(data.settings.theme);
 
     useEffect(() => {
@@ -64,6 +92,7 @@ export default function App() {
                         />
                     }
                 />
+                <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
             <BottomNav />
         </BrowserRouter>
