@@ -281,12 +281,12 @@ export default function Gym() {
                             </button>
                             {EXERCISE_CATEGORIES.map(cat => (
                                 <button
-                                    key={cat}
+                                    key={cat.id}
                                     type="button"
-                                    className={`category-pill${selectedCategory === cat ? ' active' : ''}`}
-                                    onClick={() => setSelectedCategory(cat)}
+                                    className={`category-pill${selectedCategory === cat.id ? ' active' : ''}`}
+                                    onClick={() => setSelectedCategory(cat.id)}
                                 >
-                                    {cat}
+                                    {cat.emoji} {cat.name}
                                 </button>
                             ))}
                         </div>

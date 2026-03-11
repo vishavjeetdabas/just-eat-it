@@ -639,6 +639,16 @@ body {
   }
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .animate-in {
   animation: fadeIn 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
