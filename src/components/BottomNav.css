@@ -1,4 +1,4 @@
-/* 8. Bottom Nav — iOS Native Polish */
+/* 8. Bottom Nav — iOS Native Polish Premium */
 .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -6,15 +6,19 @@
     right: 0;
     z-index: 100;
     padding-bottom: var(--safe-area-bottom);
-    background: rgba(20, 20, 20, 0.7);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(20, 20, 20, 0.75);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.03),
+        0 -8px 24px rgba(0, 0, 0, 0.25);
 }
 
 [data-theme="light"] .bottom-nav {
-    background: rgba(255, 255, 255, 0.72);
+    background: rgba(255, 255, 255, 0.78);
     border-top: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.02),
+        0 -4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .bottom-nav-inner {
@@ -27,7 +31,7 @@
     position: relative;
 }
 
-/* Sliding indicator */
+/* Sliding indicator with gradient glow */
 .nav-indicator {
     position: absolute;
     top: -1px;
@@ -36,16 +40,17 @@
     display: flex;
     justify-content: center;
     pointer-events: none;
-    transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .nav-indicator::after {
     content: '';
     width: 36px;
     height: 3px;
-    background: var(--accent);
+    background: linear-gradient(90deg, var(--accent-light), var(--accent));
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.35);
+    box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.4),
+        0 0 4px rgba(var(--accent-rgb), 0.6);
 }
 
 .nav-tab {
@@ -65,7 +70,6 @@
     flex: 1;
 }
 
-/* 10. Tap feedback */
 .nav-tab:active {
     transform: scale(0.9);
 }
@@ -77,6 +81,11 @@
 .nav-icon {
     font-size: 1.25rem;
     line-height: 1;
+    transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.nav-tab.active .nav-icon {
+    transform: scale(1.1);
 }
 
 .nav-label {

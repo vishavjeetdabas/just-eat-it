@@ -5,7 +5,7 @@ const tabs = [
     { path: '/', icon: '🏠', label: 'Home' },
     { path: '/calendar', icon: '📅', label: 'Calendar' },
     { path: '/progress', icon: '📊', label: 'Progress' },
-    { path: '/workout', icon: '🏋️', label: 'Workout' },
+    { path: '/gym', icon: '💪', label: 'Gym' },
     { path: '/settings', icon: '⚙️', label: 'Settings' },
 ];
 

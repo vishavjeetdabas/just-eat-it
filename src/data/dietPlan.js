@@ -1,21 +1,60 @@
-// Sunny's Bali Recomp Diet Plan — Complete Data
+// Diet Plan — Defaults & Utilities
+// Profile/macros are now dynamic and stored in user settings.
+// These constants serve as DEFAULTS for onboarding.
 
-export const PROFILE = {
-    name: 'Sunny',
-    weight: 89,
-    height: 183,
-    age: 21,
-    tdee: 3336,
-    targetCals: 2650,
-    restDayCals: 2280,
-    deficit: 686,
-    expectedFatLoss: '2.5-3 kg',
+export const DEFAULT_PROFILE = {
+    name: '',
+    weight: 80,
+    height: 175,
+    age: 22,
+    goal: 'recomp', // cut | bulk | recomp | maintain
+    trainingDaysPerWeek: 5,
+    targetCals: 2500,
+    restDayCals: 2200,
 };
 
-export const MACROS = {
-    training: { protein: 194, carbs: 310, fats: 70, calories: 2650 },
-    rest: { protein: 194, carbs: 265, fats: 58, calories: 2280 },
-};
+// Calculate macros from profile data
+export function calculateMacros(profile) {
+    const { weight, goal, targetCals, restDayCals } = profile;
+    const proteinPerKg = goal === 'cut' ? 2.4 : goal === 'bulk' ? 2.0 : 2.2;
+    const protein = Math.round(weight * proteinPerKg);
+    const proteinCals = protein * 4;
+
+    // Training day
+    const trainingFatCals = Math.round(targetCals * 0.25);
+    const trainingFat = Math.round(trainingFatCals / 9);
+    const trainingCarbCals = targetCals - proteinCals - trainingFatCals;
+    const trainingCarbs = Math.round(trainingCarbCals / 4);
+
+    // Rest day
+    const restFatCals = Math.round(restDayCals * 0.25);
+    const restFat = Math.round(restFatCals / 9);
+    const restCarbCals = restDayCals - proteinCals - restFatCals;
+    const restCarbs = Math.round(restCarbCals / 4);
+
+    return {
+        training: { protein, carbs: Math.max(0, trainingCarbs), fats: trainingFat, calories: targetCals },
+        rest: { protein, carbs: Math.max(0, restCarbs), fats: restFat, calories: restDayCals },
+    };
+}
+
+// Estimate TDEE (Mifflin-St Jeor)
+export function estimateTDEE(weight, height, age, trainingDaysPerWeek) {
+    const bmr = 10 * weight + 6.25 * height - 5 * age + 5; // male formula
+    const activityMultiplier = trainingDaysPerWeek >= 5 ? 1.55 : trainingDaysPerWeek >= 3 ? 1.45 : 1.35;
+    return Math.round(bmr * activityMultiplier);
+}
+
+// Suggest calorie targets based on goal
+export function suggestCalories(tdee, goal) {
+    switch (goal) {
+        case 'cut': return { targetCals: Math.round(tdee - 500), restDayCals: Math.round(tdee - 700) };
+        case 'bulk': return { targetCals: Math.round(tdee + 300), restDayCals: Math.round(tdee + 100) };
+        case 'maintain': return { targetCals: tdee, restDayCals: Math.round(tdee - 100) };
+        case 'recomp':
+        default: return { targetCals: Math.round(tdee - 300), restDayCals: Math.round(tdee - 500) };
+    }
+}
 
 export const MEALS = {
     training: [

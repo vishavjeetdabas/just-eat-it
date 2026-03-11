@@ -1,5 +1,5 @@
 /* ==========================================
-   Calendar — Tracking History
+   Calendar — Tracking History Premium
    ========================================== */
 
 .calendar-nav {
@@ -35,7 +35,7 @@
     font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     -webkit-tap-highlight-color: transparent;
     position: relative;
     border: 1px solid transparent;
@@ -57,13 +57,14 @@
 }
 
 .cal-day.complete {
-    background: rgba(var(--success-rgb), 0.15);
+    background: linear-gradient(135deg, rgba(var(--success-rgb), 0.18), rgba(var(--success-rgb), 0.08));
     color: var(--success);
     border-color: rgba(var(--success-rgb), 0.2);
+    box-shadow: 0 2px 6px rgba(var(--success-rgb), 0.08);
 }
 
 .cal-day.partial {
-    background: rgba(var(--accent-rgb), 0.12);
+    background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.15), rgba(var(--accent-rgb), 0.06));
     color: var(--accent);
     border-color: rgba(var(--accent-rgb), 0.15);
 }
@@ -79,8 +80,8 @@
 }
 
 .cal-day.selected {
-    box-shadow: 0 0 0 2px var(--accent), var(--accent-glow);
-    transform: scale(1.04);
+    box-shadow: 0 0 0 2px var(--accent), 0 0 16px rgba(var(--accent-rgb), 0.25);
+    transform: scale(1.06);
     z-index: 1;
 }
 
@@ -113,11 +114,13 @@
 }
 
 .legend-dot.complete {
-    background: var(--success);
+    background: linear-gradient(135deg, var(--success), #2EAF4F);
+    box-shadow: 0 0 4px rgba(var(--success-rgb), 0.3);
 }
 
 .legend-dot.partial {
-    background: var(--accent);
+    background: linear-gradient(135deg, var(--accent-light), var(--accent));
+    box-shadow: 0 0 4px rgba(var(--accent-rgb), 0.3);
 }
 
 .legend-dot.missed {
@@ -159,11 +162,13 @@
     background: var(--bg-glass);
     border-radius: var(--radius-sm);
     border: 1px solid var(--glass-border);
-    transition: border-color 0.2s ease;
+    transition: all 0.25s ease;
 }
 
 .day-detail-meal.done {
     border-color: rgba(var(--success-rgb), 0.2);
+    background-image: linear-gradient(135deg, rgba(var(--success-rgb), 0.04), transparent);
+    background-size: 100% 100%;
 }
 
 .day-detail-meal .text-body {

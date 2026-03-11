@@ -7,16 +7,17 @@ import BottomNav from './components/BottomNav';
 import Dashboard from './pages/Dashboard';
 import Calendar from './pages/Calendar';
 import Progress from './pages/Progress';
-import Workout from './pages/Workout';
+import Gym from './pages/Gym';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
+import Onboarding from './pages/Onboarding';
 
 export default function App() {
     const [session, setSession] = useState(null);
     const [loading, setLoading] = useState(isSupabaseConfigured);
 
     useEffect(() => {
-        if (!isSupabaseConfigured) return;
+        if (!isSupabaseConfigured || !supabase) return;
 
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
@@ -38,7 +39,7 @@ export default function App() {
                     Supabase environment variables are missing.
                 </p>
                 <div className="glass-card w-full" style={{ textAlign: 'left' }}>
-                    <p className="text-caption mb-12">If you deployed this app, you must add the following Environment Variables to your hosting provider (Vercel, Netlify, etc):</p>
+                    <p className="text-caption mb-12">Add the following Environment Variables to your hosting provider (Vercel, Netlify, etc):</p>
                     <ul className="text-micro stack-sm">
                         <li><code>VITE_SUPABASE_URL</code></li>
                         <li><code>VITE_SUPABASE_ANON_KEY</code></li>
@@ -58,14 +59,26 @@ export default function App() {
 }
 
 function MainApp({ user }) {
-    const { data, updateDayField, updateSettings } = useAppData(user);
-    const { theme, toggleTheme } = useTheme(data.settings.theme);
+    const { data, updateDayField, updateSettings, updateProfile } = useAppData(user);
+    const { theme, toggleTheme, colorTheme, setColorTheme } = useTheme(data.settings.theme, data.settings.colorTheme);
 
     useEffect(() => {
         if (data.settings.theme !== theme) {
             updateSettings({ theme });
         }
     }, [data.settings.theme, theme, updateSettings]);
+
+    // Show onboarding if not complete
+    if (!data.settings.onboardingComplete) {
+        return (
+            <Onboarding
+                onComplete={(profile, customMeals) => {
+                    updateProfile(profile);
+                    updateSettings({ onboardingComplete: true, profile, customMeals });
+                }}
+            />
+        );
+    }
 
     return (
         <BrowserRouter>
@@ -93,13 +106,8 @@ function MainApp({ user }) {
                     }
                 />
                 <Route
-                    path="/workout"
-                    element={
-                        <Workout
-                            data={data}
-                            updateDayField={updateDayField}
-                        />
-                    }
+                    path="/gym"
+                    element={<Gym data={data} />}
                 />
                 <Route
                     path="/settings"
@@ -107,8 +115,11 @@ function MainApp({ user }) {
                         <Settings
                             data={data}
                             updateSettings={updateSettings}
+                            updateProfile={updateProfile}
                             theme={theme}
                             toggleTheme={toggleTheme}
+                            colorTheme={colorTheme}
+                            setColorTheme={setColorTheme}
                         />
                     }
                 />

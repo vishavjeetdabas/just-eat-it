@@ -1,10 +1,15 @@
 /* ==========================================
-   Progress — Transformation Tracker
+   Progress — Transformation Tracker Premium
    ========================================== */
 
 /* Weekly Summary */
 .summary-card {
     margin-bottom: 12px;
+    background-image:
+        radial-gradient(ellipse at 50% 0%, rgba(var(--accent-rgb), 0.06) 0%, transparent 60%),
+        linear-gradient(180deg, var(--glass-highlight) 0%, transparent 40%),
+        radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 3px 3px;
 }
 
 .summary-card h2 {
@@ -26,6 +31,11 @@
     background: var(--bg-glass);
     border-radius: var(--radius-sm);
     border: 1px solid var(--glass-border);
+    transition: transform 0.2s ease;
+}
+
+.summary-item:active {
+    transform: scale(0.97);
 }
 
 .summary-item.full-width {
@@ -85,7 +95,19 @@
     background: linear-gradient(to top, var(--accent), var(--accent-light));
     border-radius: 6px 6px 3px 3px;
     animation: fillUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-    box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.2);
+    box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.2);
+    position: relative;
+}
+
+.weight-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 30%;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), transparent);
+    border-radius: 6px 6px 0 0;
 }
 
 /* Photos */
@@ -109,6 +131,11 @@
     object-fit: cover;
     border-radius: var(--radius-sm);
     border: 1px solid var(--glass-border);
+    transition: transform 0.2s ease;
+}
+
+.photo-item img:active {
+    transform: scale(0.97);
 }
 
 .comparison-section {
@@ -137,11 +164,19 @@
     border-radius: var(--radius-md);
     border: 2px solid var(--accent);
     box-shadow: var(--accent-glow);
+    transition: transform 0.2s ease;
+}
+
+.comparison-item img:active {
+    transform: scale(0.97);
 }
 
 .comparison-divider {
     font-size: 1.25rem;
-    color: var(--accent);
+    background: linear-gradient(135deg, var(--accent-light), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     font-weight: 800;
 }
 

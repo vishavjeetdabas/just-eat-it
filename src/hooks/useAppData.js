@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
-import { formatDateKeyLocal } from '../data/dietPlan';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { formatDateKeyLocal, DEFAULT_PROFILE, MEALS as DEFAULT_MEALS } from '../data/dietPlan';
 
 const STORAGE_KEY = 'justeatit_data';
-const APP_DATA_VERSION = 1;
+const APP_DATA_VERSION = 2;
 const MAX_SAVED_PHOTOS = 6;
 
 function getDefaultSettings() {
@@ -13,6 +13,9 @@ function getDefaultSettings() {
         notifications: true,
         lastEggPrep: null,
         lastDalPrep: null,
+        onboardingComplete: false,
+        profile: { ...DEFAULT_PROFILE },
+        customMeals: null, // null = use defaults from dietPlan.js
     };
 }
 
@@ -32,6 +35,29 @@ function normalizeDateLike(value) {
     return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
 }
 
+function sanitizeProfile(rawProfile) {
+    const fallback = { ...DEFAULT_PROFILE };
+    const input = rawProfile && typeof rawProfile === 'object' ? rawProfile : {};
+
+    return {
+        name: typeof input.name === 'string' ? input.name : fallback.name,
+        weight: Number.isFinite(Number(input.weight)) ? Math.max(30, Math.min(300, Number(input.weight))) : fallback.weight,
+        height: Number.isFinite(Number(input.height)) ? Math.max(100, Math.min(250, Number(input.height))) : fallback.height,
+        age: Number.isFinite(Number(input.age)) ? Math.max(10, Math.min(100, Number(input.age))) : fallback.age,
+        goal: ['cut', 'bulk', 'recomp', 'maintain'].includes(input.goal) ? input.goal : fallback.goal,
+        trainingDaysPerWeek: Number.isFinite(Number(input.trainingDaysPerWeek)) ? Math.max(1, Math.min(7, Number(input.trainingDaysPerWeek))) : fallback.trainingDaysPerWeek,
+        targetCals: Number.isFinite(Number(input.targetCals)) ? Math.max(1000, Math.min(6000, Math.round(Number(input.targetCals)))) : fallback.targetCals,
+        restDayCals: Number.isFinite(Number(input.restDayCals)) ? Math.max(1000, Math.min(6000, Math.round(Number(input.restDayCals)))) : fallback.restDayCals,
+    };
+}
+
+function sanitizeCustomMeals(rawMeals) {
+    if (!rawMeals || typeof rawMeals !== 'object') return null;
+    // Validate structure: { training: [...], rest: [...] }
+    if (!Array.isArray(rawMeals.training) || !Array.isArray(rawMeals.rest)) return null;
+    return rawMeals;
+}
+
 function sanitizeSettings(rawSettings) {
     const fallback = getDefaultSettings();
     const input = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
@@ -43,6 +69,9 @@ function sanitizeSettings(rawSettings) {
         notifications: typeof input.notifications === 'boolean' ? input.notifications : fallback.notifications,
         lastEggPrep: normalizeDateLike(input.lastEggPrep),
         lastDalPrep: normalizeDateLike(input.lastDalPrep),
+        onboardingComplete: typeof input.onboardingComplete === 'boolean' ? input.onboardingComplete : fallback.onboardingComplete,
+        profile: sanitizeProfile(input.profile),
+        customMeals: sanitizeCustomMeals(input.customMeals),
     };
 }
 
@@ -173,26 +202,32 @@ function getInitialData() {
     }
 }
 
+// Helper: get the active meal plan (custom or default)
+export function getActiveMeals(settings) {
+    if (settings.customMeals) {
+        return settings.customMeals;
+    }
+    return DEFAULT_MEALS;
+}
+
 export function useAppData(user) {
     const [data, setData] = useState(getInitialData);
     const [isCloudSynced, setIsCloudSynced] = useState(false);
 
     // Initial Fetch from Cloud
     useEffect(() => {
-        if (!user) return;
+        if (!user || !isSupabaseConfigured || !supabase) return;
 
         async function fetchCloudData() {
             try {
-                // Fetch Settings
                 const { data: settingsData, error: settingsError } = await supabase
                     .from('settings')
                     .select('*')
                     .eq('user_id', user.id)
                     .single();
 
-                // Fetch last 14 days to prevent fetching massive amounts of old data
                 const cutoffDate = new Date();
-                cutoffDate.setDate(cutoffDate.getDate() - 14);
+                cutoffDate.setDate(cutoffDate.getDate() - 30);
 
                 const { data: logsData, error: logsError } = await supabase
                     .from('daily_logs')
@@ -213,19 +248,25 @@ export function useAppData(user) {
                         ...prevLocalData.settings,
                         theme: settingsData.theme || 'dark',
                         lastEggPrep: settingsData.last_egg_prep || null,
+                        onboardingComplete: settingsData.onboarding_complete ?? prevLocalData.settings.onboardingComplete,
+                        profile: settingsData.profile ? sanitizeProfile(settingsData.profile) : prevLocalData.settings.profile,
+                        customMeals: settingsData.custom_meals ? sanitizeCustomMeals(settingsData.custom_meals) : prevLocalData.settings.customMeals,
                     } : prevLocalData.settings;
 
                     const mergedDays = { ...prevLocalData.days };
 
                     if (logsData) {
                         logsData.forEach(log => {
+                            const localDay = mergedDays[log.date_key];
                             mergedDays[log.date_key] = sanitizeDayData(log.date_key, {
-                                ...mergedDays[log.date_key], // Keep local photos/weight if not in db
                                 isTrainingDay: log.is_training_day,
                                 meals: log.meals,
                                 water: log.water,
                                 sleep: log.sleep,
-                                workout: log.workout
+                                workout: log.workout,
+                                weight: log.weight ?? localDay?.weight ?? null,
+                                // Keep local photo — photos stay in localStorage only
+                                photo: localDay?.photo ?? null,
                             });
                         });
                     }
@@ -271,9 +312,8 @@ export function useAppData(user) {
                 days = limitPhotoEntries(days);
             }
 
-            // Cloud Sync Background (Fire and forget, optimistic UI)
-            if (user && isCloudSynced && field !== 'photo' && field !== 'weight') {
-                // We sync core metrics to Postgres table
+            // Cloud sync — photos stay local-only (too large for DB), everything else syncs
+            if (user && isCloudSynced && isSupabaseConfigured && supabase && field !== 'photo') {
                 const dbPayload = {
                     user_id: user.id,
                     date_key: dateKey,
@@ -282,6 +322,7 @@ export function useAppData(user) {
                     water: updatedDay.water,
                     sleep: updatedDay.sleep || {},
                     workout: updatedDay.workout || null,
+                    weight: updatedDay.weight || null,
                     updated_at: new Date().toISOString()
                 };
 
@@ -301,14 +342,16 @@ export function useAppData(user) {
         setData((prev) => {
             const newSettings = sanitizeSettings({ ...prev.settings, ...updates });
 
-            // Cloud Sync Background
-            if (user && isCloudSynced) {
+            if (user && isCloudSynced && isSupabaseConfigured && supabase) {
                 supabase
                     .from('settings')
                     .upsert({
                         user_id: user.id,
                         theme: newSettings.theme,
                         last_egg_prep: newSettings.lastEggPrep,
+                        onboarding_complete: newSettings.onboardingComplete,
+                        profile: newSettings.profile,
+                        custom_meals: newSettings.customMeals,
                         updated_at: new Date().toISOString()
                     })
                     .then(({ error }) => {
@@ -320,7 +363,33 @@ export function useAppData(user) {
         });
     }, [user, isCloudSynced]);
 
-    return { data, updateDayField, updateSettings };
+    const updateProfile = useCallback((profileUpdates) => {
+        setData((prev) => {
+            const newProfile = sanitizeProfile({ ...prev.settings.profile, ...profileUpdates });
+            const newSettings = { ...prev.settings, profile: newProfile };
+
+            if (user && isCloudSynced && isSupabaseConfigured && supabase) {
+                supabase
+                    .from('settings')
+                    .upsert({
+                        user_id: user.id,
+                        theme: newSettings.theme,
+                        last_egg_prep: newSettings.lastEggPrep,
+                        onboarding_complete: newSettings.onboardingComplete,
+                        profile: newProfile,
+                        custom_meals: newSettings.customMeals,
+                        updated_at: new Date().toISOString()
+                    })
+                    .then(({ error }) => {
+                        if (error) console.error("Failed to sync profile to cloud:", error);
+                    });
+            }
+
+            return { ...prev, settings: newSettings };
+        });
+    }, [user, isCloudSynced]);
+
+    return { data, updateDayField, updateSettings, updateProfile };
 }
 
 export function calculateStreak(days) {
@@ -335,7 +404,7 @@ export function calculateStreak(days) {
         const day = days?.[key];
 
         if (!day) {
-            if (i === 0) continue; // no meals logged today does not break streak
+            if (i === 0) continue;
             break;
         }
 
@@ -347,7 +416,7 @@ export function calculateStreak(days) {
             if (allMealsChecked) {
                 streak++;
             } else if (someMealsChecked) {
-                return 0; // partial today resets active streak
+                return 0;
             }
             continue;
         }

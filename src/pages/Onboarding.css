@@ -1,0 +1,358 @@
+/* ===========================================
+   Onboarding — Multi-step Wizard Premium
+   =========================================== */
+
+.onboard-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+    padding: calc(env(safe-area-inset-top, 0px) + 40px) 24px calc(env(safe-area-inset-bottom, 0px) + 24px);
+    max-width: 430px;
+    margin: 0 auto;
+    justify-content: space-between;
+    /* Ambient gradient background */
+    background:
+        radial-gradient(ellipse at 50% 20%, rgba(var(--accent-rgb), 0.06) 0%, transparent 50%),
+        var(--bg-primary);
+}
+
+/* Progress Dots */
+.onboard-progress {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.onboard-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--bg-glass);
+    border: 1px solid var(--glass-border);
+    transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.onboard-dot.active {
+    width: 32px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, var(--accent-light), var(--accent));
+    border-color: var(--accent);
+    box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.5);
+}
+
+.onboard-dot.done {
+    background: var(--accent);
+    border-color: var(--accent);
+    opacity: 0.5;
+}
+
+/* Step Content */
+.onboard-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.onboard-step {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    animation: fadeSlideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes fadeSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.onboard-emoji {
+    font-size: 3.5rem;
+    margin-bottom: 16px;
+    animation: bounceIn 0.5s ease both;
+}
+
+@keyframes bounceIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    60% { transform: scale(1.15); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.onboard-sub {
+    margin-top: 6px;
+    margin-bottom: 28px;
+    max-width: 280px;
+}
+
+/* Inputs */
+.onboard-input {
+    width: 100%;
+    max-width: 320px;
+    padding: 16px 18px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--glass-border);
+    background: var(--bg-glass);
+    color: var(--text-primary);
+    font-size: 1.125rem;
+    font-weight: 500;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.onboard-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.15);
+}
+
+.onboard-input::placeholder {
+    color: var(--text-tertiary);
+}
+
+/* Stats Grid */
+.onboard-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+    max-width: 320px;
+}
+
+.onboard-stat-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-align: left;
+}
+
+.onboard-stat-field .onboard-input {
+    max-width: none;
+    text-align: left;
+    padding: 14px 14px;
+    font-size: 1rem;
+}
+
+/* Goal Cards */
+.onboard-goal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+    max-width: 340px;
+}
+
+.onboard-goal-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 20px 12px;
+    border-radius: var(--radius-md);
+    border: 2px solid var(--glass-border);
+    background: var(--bg-glass);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    -webkit-tap-highlight-color: transparent;
+    font-family: inherit;
+    /* Premium glass top highlight */
+    background-image:
+        linear-gradient(180deg, var(--glass-highlight) 0%, transparent 50%),
+        radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 100% 100%, 3px 3px;
+}
+
+.onboard-goal-card:active {
+    transform: scale(0.96);
+}
+
+.onboard-goal-card.selected {
+    border-color: var(--accent);
+    background-image:
+        linear-gradient(135deg, rgba(var(--accent-rgb), 0.1), rgba(var(--accent-rgb), 0.03)),
+        linear-gradient(180deg, var(--glass-highlight) 0%, transparent 50%),
+        radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 3px 3px;
+    box-shadow: 0 0 20px rgba(var(--accent-rgb), 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.goal-emoji {
+    font-size: 1.75rem;
+}
+
+.goal-label {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.goal-desc {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+/* Hint */
+.onboard-hint {
+    margin-top: 16px;
+    padding: 12px 16px;
+    text-align: center;
+    max-width: 320px;
+    width: 100%;
+}
+
+/* Summary */
+.onboard-summary {
+    width: 100%;
+    max-width: 340px;
+    padding: 20px;
+    margin-top: 8px;
+    text-align: left;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+}
+
+.summary-row + .summary-row {
+    border-top: 1px solid var(--glass-border);
+}
+
+.summary-divider {
+    border: none;
+    border-top: 2px solid var(--accent);
+    margin: 6px 0;
+    opacity: 0.3;
+}
+
+/* Navigation */
+.onboard-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding-top: 20px;
+}
+
+.onboard-back-btn {
+    min-width: 90px;
+}
+
+.onboard-next-btn {
+    min-width: 140px;
+    flex: 1;
+    max-width: 220px;
+}
+
+.glow-btn {
+    animation: glowPulse 2s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+    0%, 100% { box-shadow: 0 4px 20px rgba(var(--accent-rgb), 0.4); }
+    50% { box-shadow: 0 4px 30px rgba(var(--accent-rgb), 0.65); }
+}
+
+/* Diet Plan Step */
+.diet-choice-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+    max-width: 340px;
+    margin-bottom: 16px;
+}
+
+.custom-meals-section {
+    width: 100%;
+    max-width: 340px;
+    text-align: left;
+}
+
+.mini-meal-card {
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.mini-meal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.mini-meal-remove {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid var(--glass-border);
+    background: transparent;
+    color: var(--text-tertiary);
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.onboard-input.mini {
+    max-width: none;
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 0.875rem;
+    margin-bottom: 8px;
+}
+
+.mini-macro-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 6px;
+}
+
+.onboard-input.tiny {
+    max-width: none;
+    text-align: center;
+    padding: 8px 4px;
+    font-size: 0.75rem;
+}
+
+.add-meal-btn {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin: 6px 0 16px;
+    border: 2px dashed var(--glass-border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.add-meal-btn:active {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.mt-16 {
+    margin-top: 16px;
+}
+
+.default-meals-preview {
+    width: 100%;
+    max-width: 340px;
+}

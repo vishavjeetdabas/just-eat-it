@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import ProgressRing from '../components/ProgressRing';
-import { MEALS, MACROS, WATER_GOAL, getDateKey, getDayName } from '../data/dietPlan';
-import { createEmptyDay, calculateStreak } from '../hooks/useAppData';
+import { WATER_GOAL, getDateKey, getDayName, calculateMacros } from '../data/dietPlan';
+import { createEmptyDay, calculateStreak, getActiveMeals } from '../hooks/useAppData';
 import './Dashboard.css';
 
 export default function Dashboard({ data, updateDayField }) {
@@ -9,11 +9,13 @@ export default function Dashboard({ data, updateDayField }) {
     const dayName = getDayName();
     const dayData = data.days[today] || createEmptyDay(today);
     const isTraining = dayData.isTrainingDay;
-    const meals = isTraining ? MEALS.training : MEALS.rest;
-    const macros = isTraining ? MACROS.training : MACROS.rest;
+    const activeMeals = getActiveMeals(data.settings);
+    const meals = isTraining ? activeMeals.training : activeMeals.rest;
+    const profile = data.settings.profile;
+    const computedMacros = calculateMacros(profile);
+    const macros = isTraining ? computedMacros.training : computedMacros.rest;
     const [expandedMeal, setExpandedMeal] = useState(null);
     const [showCelebration, setShowCelebration] = useState(false);
-    // Track which meals just got checked for pulse animation
     const [pulsingMeal, setPulsingMeal] = useState(null);
 
     const streak = useMemo(() => calculateStreak(data.days), [data.days]);
@@ -128,7 +130,7 @@ export default function Dashboard({ data, updateDayField }) {
                 <div className="row-between">
                     <div>
                         <p className="text-micro">{dayName}</p>
-                        <h1 className="text-title mt-4">{greeting}, Sunny</h1>
+                        <h1 className="text-title mt-4">{greeting}, {profile.name || 'Champion'}</h1>
                     </div>
                     <div className="header-avatar">
                         <img src="/logo.png" alt="Just Eat It" className="header-logo" />
