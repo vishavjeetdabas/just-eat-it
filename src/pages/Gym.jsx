@@ -122,66 +122,6 @@ export default function Gym() {
                     <span>Add Exercise</span>
                 </button>
 
-                {/* Exercise Picker Modal */}
-                {showExercisePicker && (
-                    <div className="gym-picker-overlay" onClick={() => setShowExercisePicker(false)}>
-                        <div className="gym-picker-modal" onClick={e => e.stopPropagation()}>
-                            <div className="picker-header">
-                                <h3 className="text-headline">Add Exercise</h3>
-                                <button type="button" className="picker-close" onClick={() => setShowExercisePicker(false)}>✕</button>
-                            </div>
-                            <input
-                                type="text"
-                                className="picker-search"
-                                placeholder="Search exercises..."
-                                value={searchQuery}
-                                onChange={e => setSearchQuery(e.target.value)}
-                                autoFocus
-                            />
-                            <div className="picker-categories">
-                                <button
-                                    type="button"
-                                    className={`cat-pill${!selectedCategory ? ' active' : ''}`}
-                                    onClick={() => setSelectedCategory(null)}
-                                >All</button>
-                                {EXERCISE_CATEGORIES.map(c => (
-                                    <button
-                                        key={c.id}
-                                        type="button"
-                                        className={`cat-pill${selectedCategory === c.id ? ' active' : ''}`}
-                                        onClick={() => setSelectedCategory(c.id)}
-                                    >{c.emoji} {c.name}</button>
-                                ))}
-                            </div>
-                            <div className="picker-list">
-                                {filteredExercises.map(ex => {
-                                    const alreadyAdded = activeWorkout.exercises.some(e => e.exerciseId === ex.id);
-                                    return (
-                                        <button
-                                            key={ex.id}
-                                            type="button"
-                                            className={`picker-exercise${alreadyAdded ? ' added' : ''}`}
-                                            onClick={() => {
-                                                if (!alreadyAdded) {
-                                                    addExerciseToWorkout(ex);
-                                                    setExpandedExercise(ex.id);
-                                                }
-                                                setShowExercisePicker(false);
-                                                setSearchQuery('');
-                                                setSelectedCategory(null);
-                                            }}
-                                            disabled={alreadyAdded}
-                                        >
-                                            <span className="picker-ex-emoji">{ex.emoji}</span>
-                                            <span className="picker-ex-name">{ex.name}</span>
-                                            {alreadyAdded && <span className="picker-ex-check">✓</span>}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
         );
     };
@@ -305,6 +245,82 @@ export default function Gym() {
                 {view === 'history' && renderHistoryView()}
                 {view === 'prs' && renderPRsView()}
             </div>
+
+            {/* Exercise Picker Modal */}
+            {showExercisePicker && (
+                <div className="gym-picker-overlay animate-in" onClick={() => {
+                    setShowExercisePicker(false);
+                    setSearchQuery('');
+                    setSelectedCategory(null);
+                }}>
+                    <div className="gym-picker-modal" onClick={e => e.stopPropagation()}>
+                        <div className="picker-header">
+                            <h2 className="text-headline">Select Exercise</h2>
+                            <button type="button" className="picker-close" onClick={() => {
+                                setShowExercisePicker(false);
+                                setSearchQuery('');
+                                setSelectedCategory(null);
+                            }}>✕</button>
+                        </div>
+                        
+                        <input
+                            type="text"
+                            placeholder="Search exercises..."
+                            className="w-full mb-12"
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                        />
+
+                        <div className="category-pills">
+                            <button
+                                type="button"
+                                className={`category-pill${selectedCategory === null ? ' active' : ''}`}
+                                onClick={() => setSelectedCategory(null)}
+                            >
+                                All
+                            </button>
+                            {EXERCISE_CATEGORIES.map(cat => (
+                                <button
+                                    key={cat}
+                                    type="button"
+                                    className={`category-pill${selectedCategory === cat ? ' active' : ''}`}
+                                    onClick={() => setSelectedCategory(cat)}
+                                >
+                                    {cat}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="picker-list stack">
+                            {filteredExercises.length > 0 ? (
+                                filteredExercises.map(ex => (
+                                    <button
+                                        key={ex.id}
+                                        type="button"
+                                        className="picker-item row"
+                                        onClick={() => {
+                                            addExerciseToWorkout(ex);
+                                            setShowExercisePicker(false);
+                                            setSearchQuery('');
+                                            setSelectedCategory(null);
+                                        }}
+                                    >
+                                        <span className="picker-emoji">{ex.emoji}</span>
+                                        <div className="picker-item-info">
+                                            <span className="text-body fw-500">{ex.name}</span>
+                                            <span className="text-caption">{ex.muscleGroup}</span>
+                                        </div>
+                                    </button>
+                                ))
+                            ) : (
+                                <div className="text-center mt-12 text-muted">
+                                    No exercises found.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
